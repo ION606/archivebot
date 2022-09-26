@@ -24,7 +24,7 @@ const nsfw = process.env['nsfw'];
 
 const list = [inst, twit, redd, you, oth, nsfw]
 
-const client = new Client({ 
+const bot = new Client({ 
     intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
@@ -36,43 +36,43 @@ const prefix = '/';
 const emojiPrefix = "<:archive:";
 
 const fs = require('fs');
-const { exit } = require('process');
-client.commands = new Discord.Collection();
 
-client.commNames = new Discord.Collection();
+// client.commands = new Discord.Collection();
+// client.commNames = new Discord.Collection();
 
 const commandFiles = fs.readdirSync('./commands/').filter(file => file.endsWith('.js'));
 
 let i = 0;
+const commands = bot.application.commands;
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
 
-    client.commands.set(command.name, command);
-    client.commNames.set(i, [command.name, command.description]);
+    commands.create({
+      name: command.name,
+      description: command.description,
+      options: command.options,
+      dm_permission: false,
+    });
     i ++;
 }
 
+client.on('interactionCreate', async interaction => {
+    const { commandName } = interaction;
 
-client.commNames.set('length', i);
-
-
+    if (commandName == 'archive') {
+      const arch = require('./commands/archive.js');
+      arch.execute(interaction, list, bot, Discord);
+    } else {
+      interaction.reply("Invalid Command!");
+    }
+});
 // client.on('ready', () => {
 //     console.log('Archive Bot online!');
 // });
 
 
+/*
 client.on('messageCreate', (message) => {
-
-    /*//PREVIEW COMMANDS START
-    const lib = require('lib')({token: process.env.STDLIB_SECRET_TOKEN});
-
-    lib.discord.commands['@0.0.0'].create({
-    "name": "test",
-    "description": "it's a test command!",
-    "options": []
-    });
-
-    //PREVIEW COMMANDS END*/
     
     //COMMAND AREA
     //Check if the prefix exists
@@ -100,8 +100,8 @@ client.on('messageCreate', (message) => {
         default: message.channel.send("'" + message.content + "' is not a command!");
     }
 })
-
+*/
 
 
 //Last Line
-client.login(token);
+bot.login(token);
